@@ -16,6 +16,7 @@ It also includes optional integrations:
 - **Qdrant** for vector search over product context (seeded from local fixtures)
 - **MySQL** for real ticket persistence (create/update/list/close) + analytics
 - **MCP Gmail Calendar adapter** for checking availability + creating calendar events
+- **MCP HubSpot CRM adapter** for capturing prospect emails
 - **SMTP escalation** for sending support escalation emails
 
 ## How It Works (High Level)
@@ -24,6 +25,7 @@ It also includes optional integrations:
   - retrieves product context via Qdrant (`search_product_vectors`)
   - quotes pricing via fixtures (`get_pricing`)
   - can schedule demos via MCP calendar tools (`check_calendar_availability`, `schedule_calendar_event`)
+  - can capture prospect emails via MCP HubSpot (`create_crm_contact`)
 - The **support agent**:
   - retrieves product context via Qdrant (`search_product_vectors`)
   - checks order status via fixtures (`check_order_status`)
@@ -60,6 +62,7 @@ python -m agents_sdk.runner
   - **Qdrant** (vector search)
   - **MySQL 8+** (ticket tools, ETL, KPI notebook)
   - **MCP Calendar adapter** (calendar read/write via HTTP)
+  - **MCP HubSpot adapter** (lead capture via HTTP)
   - **SMTP creds** (support escalation email)
 
 ## Install Dependencies
@@ -133,6 +136,18 @@ Expected JSON `POST` endpoints:
 - `/calendar/availability` with `calendar_id`, `start`, `end`, `timezone`
 - `/calendar/events` with `calendar_id`, `title`, `start`, `end`, `timezone`, `attendees`, `description`, `location`
 
+## MCP HubSpot CRM (Lead Capture)
+The sales agent can capture prospect emails and create CRM contacts via a HubSpot MCP adapter.
+
+Set:
+
+```bash
+export MCP_HUBSPOT_BASE_URL=http://localhost:3001
+```
+
+Expected JSON `POST` endpoint:
+- `/crm/contacts` with `email`, `first_name`, `last_name`, `company`, `phone`, `source`
+
 ## Support Escalation Email (SMTP)
 Support escalation uses Gmail SMTP via `shared/support_tools.py`.
 
@@ -177,6 +192,7 @@ jupyter notebook notebooks/support_kpi_dashboard.ipynb
   - `shared/qdrant_tools.py`: Qdrant search + deterministic embedding + seeding helper
   - `shared/mysql_tools.py`: MySQL ticket CRUD tools
   - `shared/mcp_calendar_tools.py`: MCP calendar HTTP client tools
+  - `shared/mcp_hubspot_tools.py`: MCP HubSpot CRM HTTP client tools
   - `shared/support_tools.py`: SMTP escalation tool
 - `langchain_app/`: LangChain multi-agent implementation (router → sales/support)
 - `agents_sdk/`: OpenAI Agents SDK multi-agent implementation (router → sales/support)

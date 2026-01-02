@@ -6,6 +6,7 @@ from agents import Agent, Runner, function_tool
 
 from shared import (
     mcp_calendar_tools,
+    mcp_hubspot_tools,
     mysql_tools,
     qdrant_tools,
     support_tools,
@@ -109,6 +110,25 @@ def schedule_calendar_event(
     )
 
 
+@function_tool
+def create_crm_contact(
+    email: str,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    company: str | None = None,
+    phone: str | None = None,
+    source: str = "sales_agent",
+):
+    return mcp_hubspot_tools.create_crm_contact(
+        email,
+        first_name,
+        last_name,
+        company,
+        phone,
+        source,
+    )
+
+
 def build_sales_agent(model: str = "gpt-4o-mini") -> Agent:
     return Agent(
         name="DriftDesk Sales",
@@ -119,6 +139,7 @@ def build_sales_agent(model: str = "gpt-4o-mini") -> Agent:
             get_pricing,
             check_calendar_availability,
             schedule_calendar_event,
+            create_crm_contact,
         ],
     )
 

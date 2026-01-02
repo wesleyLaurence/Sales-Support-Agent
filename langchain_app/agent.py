@@ -9,6 +9,7 @@ from langchain_openai import ChatOpenAI
 
 from shared import (
     mcp_calendar_tools,
+    mcp_hubspot_tools,
     mysql_tools,
     qdrant_tools,
     support_tools,
@@ -38,6 +39,7 @@ def build_sales_agent(model: str = "gpt-4o-mini") -> AgentExecutor:
         StructuredTool.from_function(qdrant_tools.search_product_vectors),
         StructuredTool.from_function(mcp_calendar_tools.check_calendar_availability),
         StructuredTool.from_function(mcp_calendar_tools.schedule_calendar_event),
+        StructuredTool.from_function(mcp_hubspot_tools.create_crm_contact),
         StructuredTool.from_function(shared_tools.get_pricing),
     ]
     agent = create_tool_calling_agent(
