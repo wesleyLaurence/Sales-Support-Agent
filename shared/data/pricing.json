@@ -1,0 +1,14 @@
+{
+  "currency": "USD",
+  "items": {
+    "DSK-100": {"unit_price": 699.0},
+    "DSK-120": {"unit_price": 449.0},
+    "CHR-210": {"unit_price": 259.0},
+    "LMP-300": {"unit_price": 129.0},
+    "ACC-410": {"unit_price": 59.0}
+  },
+  "promos": {
+    "BUNDLE10": {"percent_off": 10, "min_subtotal": 300},
+    "FREESHIP": {"percent_off": 0, "min_subtotal": 200, "note": "Free standard shipping"}
+  }
+}

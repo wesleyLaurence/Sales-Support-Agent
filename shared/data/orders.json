@@ -1,0 +1,5 @@
+{
+  "ORD-1001": {"status": "shipped", "eta": "2025-01-05", "items": ["DSK-100"]},
+  "ORD-1002": {"status": "processing", "eta": "2025-01-10", "items": ["CHR-210", "ACC-410"]},
+  "ORD-1003": {"status": "delivered", "eta": "2024-12-22", "items": ["LMP-300"]}
+}

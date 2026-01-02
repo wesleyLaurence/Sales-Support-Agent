@@ -1,0 +1,37 @@
+[
+  {
+    "sku": "DSK-100",
+    "name": "DriftDesk Pro",
+    "category": "standing-desk",
+    "description": "Electric standing desk with memory presets and bamboo top.",
+    "tags": ["ergonomic", "office", "adjustable", "bamboo"]
+  },
+  {
+    "sku": "CHR-210",
+    "name": "CloudMesh Chair",
+    "category": "chair",
+    "description": "Breathable mesh task chair with lumbar support.",
+    "tags": ["ergonomic", "chair", "mesh"]
+  },
+  {
+    "sku": "LMP-300",
+    "name": "GlowArc Lamp",
+    "category": "lighting",
+    "description": "LED desk lamp with ambient mode and USB-C port.",
+    "tags": ["lighting", "led", "desk"]
+  },
+  {
+    "sku": "ACC-410",
+    "name": "CableNest Kit",
+    "category": "accessory",
+    "description": "Cable management tray, clips, and sleeves.",
+    "tags": ["cable", "organization", "accessory"]
+  },
+  {
+    "sku": "DSK-120",
+    "name": "DriftDesk Lite",
+    "category": "standing-desk",
+    "description": "Compact standing desk for small workspaces.",
+    "tags": ["desk", "compact", "office"]
+  }
+]
