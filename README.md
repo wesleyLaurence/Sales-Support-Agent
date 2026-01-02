@@ -1,120 +1,118 @@
-# Sales + Support Agent (LangChain vs Agents SDK)
+# Sales + Support Agent (LangChain vs OpenAI Agents SDK)
 
-This portfolio project builds the *same* sales/support agent twice: once with LangChain, once with the OpenAI Agents SDK. The goal is to compare ergonomics, structure, and tool-calling flows while keeping behavior and tool contracts identical.
+This portfolio project implements the **same multi-agent sales + support assistant twice**:
+- **LangChain** (`langchain_app/`)
+- **OpenAI Agents SDK** (`agents_sdk/`)
 
-## Overview
-- Multi-agent system with a router, sales agent, and support agent
-- Two implementations with aligned prompts and tool surfaces for comparison
-- Qdrant vector search for product context + MySQL ticket persistence
+Both versions share the same prompts and tool contracts so you can compare **architecture, ergonomics, and tool-calling flows** apples-to-apples.
 
-## How It Works
-- A router agent classifies each user request as sales or support.
-- Sales agent uses Qdrant for product context and pricing tools.
-- Support agent uses Qdrant, MySQL ticket tools, and escalation email via SMTP.
-- Data is sourced from local JSON fixtures, Qdrant vectors, and MySQL tables.
-- A dummy API + ETL pipeline loads additional ticket data into MySQL for analytics.
+## What This Is
+DriftDesk is a fictional ergonomic office brand. The system includes:
+- A **router agent** that classifies each incoming message as **sales** or **support**
+- A **sales agent** focused on product discovery, pricing, and scheduling demos
+- A **support agent** focused on troubleshooting, order status, and ticket workflows
+
+It also includes optional integrations:
+- **Qdrant** for vector search over product context (seeded from local fixtures)
+- **MySQL** for real ticket persistence (create/update/list/close) + analytics
+- **MCP Gmail Calendar adapter** for checking availability + creating calendar events
+- **SMTP escalation** for sending support escalation emails
+
+## How It Works (High Level)
+- The **router** returns exactly one word: `sales` or `support` (mixed requests route to `support`).
+- The **sales agent**:
+  - retrieves product context via Qdrant (`search_product_vectors`)
+  - quotes pricing via fixtures (`get_pricing`)
+  - can schedule demos via MCP calendar tools (`check_calendar_availability`, `schedule_calendar_event`)
+- The **support agent**:
+  - retrieves product context via Qdrant (`search_product_vectors`)
+  - checks order status via fixtures (`check_order_status`)
+  - reads/writes **support tickets in MySQL** (`create_support_ticket`, `add_ticket_update`, etc.)
+  - escalates unresolved issues via SMTP (`escalate_support_email`)
 
 ## Features
-- Router agent for sales vs support intent.
-- Sales tools:
-  - `search_product_vectors` (Qdrant vector search)
-  - `get_pricing` (SKU -> price, promo rules)
-  - `check_calendar_availability` (Gmail Calendar via MCP)
-  - `schedule_calendar_event` (Gmail Calendar via MCP)
-- Support tools:
-  - `search_product_vectors` (Qdrant vector search)
-  - `check_order_status` (order id -> status)
-  - MySQL ticket tools (create, update, list, close)
-  - `escalate_support_email` (SMTP escalation)
-- Deterministic tool outputs via local JSON fixtures and hash-based embeddings.
-- MySQL-backed support ticket tools for read/write operations.
-- Dummy API + ETL pipeline to ingest data into MySQL.
-- KPI dashboard notebook for support analytics.
-- Minimal CLI runner for local demo.
-- Consistent example conversations.
+- **Two parallel implementations** (LangChain + Agents SDK) with aligned prompts and tool surfaces.
+- **Deterministic demo data**:
+  - pricing + orders come from JSON fixtures in `shared/data/`
+  - Qdrant search uses a **deterministic hash-based embedding** (no external embedding service required)
+- **MySQL ticket persistence** for structured support workflows.
+- **Dummy API + ETL script** to ingest customer/order/ticket records into MySQL for analytics.
+- **KPI dashboard notebook** (`notebooks/support_kpi_dashboard.ipynb`) with example charts/queries.
 
-## Architecture
-- Shared layer in `shared/` defines prompts, fixtures, and tool logic.
-- Router agent chooses between sales and support sub-agents.
-- Sales agent: Qdrant product retrieval + pricing.
-- Support agent: Qdrant retrieval + MySQL tickets + escalation email.
-- Optional MySQL path adds real persistence for ticket workflows.
-- ETL loads dummy API data into MySQL to fuel analytics.
+## Quickstart (Minimal)
+Install Python deps (see `Requirements` below), set your OpenAI key, then run either implementation:
 
-## Project Layout
-- `shared/`
-  - `data/` fixture JSON for products, pricing, orders
-  - `prompts/` shared system prompt + examples
-  - `tools.py` shared tool interfaces + logic
-  - `mysql_tools.py` MySQL-backed ticket tools
-  - `qdrant_tools.py` Qdrant search utilities
-  - `support_tools.py` escalation utilities
-  - `mcp_calendar_tools.py` MCP Gmail Calendar tools
-- `langchain_app/` LangChain implementation
-- `agents_sdk/` OpenAI Agents SDK implementation
-- `sql/` MySQL schema + seed data
-- `notebooks/` KPI dashboard notebook
-- `scripts/` run demos and evals
-
-## Requirements
-- Python 3.10+
-- Optional: MySQL 8+ (for ticket tools, ETL, and KPIs)
-- Optional: Qdrant (for vector search)
-
-## Setup
-Install dependencies:
-```
-pip install langchain langchain-openai openai-agents mysql-connector-python pandas matplotlib jupyter qdrant-client markdown
-```
-
-Set your API key:
-```
+```bash
 export OPENAI_API_KEY=...
-```
-
-## Run the Agents
-LangChain:
-```
 python -m langchain_app.runner
 ```
 
-Agents SDK:
-```
+Or:
+
+```bash
+export OPENAI_API_KEY=...
 python -m agents_sdk.runner
 ```
 
-## Qdrant Setup
-Start a local Qdrant instance, then seed product vectors:
+## Requirements
+- **Python**: 3.10+
+- **Optional services** (only needed if you want those capabilities):
+  - **Qdrant** (vector search)
+  - **MySQL 8+** (ticket tools, ETL, KPI notebook)
+  - **MCP Calendar adapter** (calendar read/write via HTTP)
+  - **SMTP creds** (support escalation email)
+
+## Install Dependencies
+This repo does not currently pin dependencies; here’s a workable baseline:
+
+```bash
+pip install langchain langchain-openai openai-agents mysql-connector-python pandas matplotlib jupyter qdrant-client markdown
 ```
+
+## Running the Multi-Agent Demos
+- **LangChain**:
+
+```bash
+python -m langchain_app.runner
+```
+
+- **OpenAI Agents SDK**:
+
+```bash
+python -m agents_sdk.runner
+```
+
+## Qdrant (Vector Search)
+The sales/support agents can retrieve product context from Qdrant via `search_product_vectors`.
+
+1) Start a local Qdrant instance (defaults assume `http://localhost:6333`).
+2) Seed the collection with products from `shared/data/products.json`:
+
+```bash
 python scripts/qdrant_seed.py
 ```
-Configure via environment variables if needed:
-```
+
+Environment variables:
+
+```bash
 export QDRANT_URL=http://localhost:6333
 export QDRANT_COLLECTION=driftdesk_products
 export QDRANT_VECTOR_DIM=128
 ```
 
-## MCP Gmail Calendar
-The sales agent can check availability and schedule events via a Gmail Calendar MCP service.
-Set the MCP base URL to your MCP calendar adapter:
-```
-export MCP_GCAL_BASE_URL=http://localhost:3000
-```
-Expected endpoints (JSON POST):
-- `/calendar/availability` with `calendar_id`, `start`, `end`, `timezone`
-- `/calendar/events` with `calendar_id`, `title`, `start`, `end`, `timezone`, `attendees`, `description`, `location`
+## MySQL (Ticket Persistence + Analytics)
+The support agent writes tickets to MySQL via `shared/mysql_tools.py`.
 
-## MySQL Schema + Seed
-```
+1) Create schema + seed sample data:
+
+```bash
 mysql -u root -p < sql/schema.sql
 mysql -u root -p < sql/seed.sql
 ```
 
-## MySQL Tools
-The MySQL-backed tools live in `shared/mysql_tools.py` and handle ticket creation, updates, and queries.
-Set these environment variables before running:
-```
+2) Configure connection:
+
+```bash
 export MYSQL_HOST=localhost
 export MYSQL_PORT=3306
 export MYSQL_USER=root
@@ -122,38 +120,77 @@ export MYSQL_PASSWORD=...
 export MYSQL_DATABASE=driftdesk_support
 ```
 
-## Escalation Email (SMTP)
-Support escalation uses Gmail SMTP. Configure:
+## MCP Gmail Calendar (Sales Scheduling)
+The sales agent can check availability and create calendar events via an MCP-style HTTP adapter.
+
+Set:
+
+```bash
+export MCP_GCAL_BASE_URL=http://localhost:3000
 ```
+
+Expected JSON `POST` endpoints:
+- `/calendar/availability` with `calendar_id`, `start`, `end`, `timezone`
+- `/calendar/events` with `calendar_id`, `title`, `start`, `end`, `timezone`, `attendees`, `description`, `location`
+
+## Support Escalation Email (SMTP)
+Support escalation uses Gmail SMTP via `shared/support_tools.py`.
+
+```bash
 export SUPPORT_EMAIL_ADDRESS=...
 export SUPPORT_EMAIL_PASSWORD=...
 export SUPPORT_ESCALATION_TO=ops@example.com
 ```
 
 ## Dummy API + ETL
-Start the local dummy API, then run the ETL to load data into MySQL:
-```
+For testing and analytics, there’s a tiny dummy HTTP API plus an ETL script that loads its data into MySQL.
+
+Run the dummy API:
+
+```bash
 python scripts/dummy_api.py
+```
+
+Run the ETL:
+
+```bash
 python scripts/etl_sync.py
 ```
-You can override the API base URL with:
-```
+
+Override the API base URL if needed:
+
+```bash
 export DUMMY_API_URL=http://127.0.0.1:8000
 ```
 
 ## KPI Notebook
-Open the KPI dashboard:
-```
+The notebook connects to MySQL and renders basic KPI summaries and charts:
+
+```bash
 jupyter notebook notebooks/support_kpi_dashboard.ipynb
 ```
 
-## Scripts
-- `scripts/eval_replay.py` replays sample queries through both agents.
-- `scripts/dummy_api.py` serves dummy JSON data for ETL.
-- `scripts/etl_sync.py` loads dummy API data into MySQL.
-- `scripts/qdrant_seed.py` seeds Qdrant with product vectors.
+## Project Layout
+- `shared/`: shared prompts, fixtures, and tool implementations
+  - `shared/data/`: product/pricing/order fixtures
+  - `shared/prompts/`: router + sales + support instructions
+  - `shared/qdrant_tools.py`: Qdrant search + deterministic embedding + seeding helper
+  - `shared/mysql_tools.py`: MySQL ticket CRUD tools
+  - `shared/mcp_calendar_tools.py`: MCP calendar HTTP client tools
+  - `shared/support_tools.py`: SMTP escalation tool
+- `langchain_app/`: LangChain multi-agent implementation (router → sales/support)
+- `agents_sdk/`: OpenAI Agents SDK multi-agent implementation (router → sales/support)
+- `sql/`: schema + seed scripts for MySQL
+- `scripts/`: Qdrant seeding, dummy API, ETL, eval replay
+- `notebooks/`: support KPI dashboard
 
-## Notes
-- Implementation should keep tool signatures aligned across versions.
-- Local fixtures drive pricing/order status; Qdrant, MySQL, MCP, and SMTP are optional external services.
-- LLM routing/agent replies are nondeterministic unless you set model temperature to 0.
+## Scripts
+- `scripts/qdrant_seed.py`: seeds Qdrant with product vectors
+- `scripts/dummy_api.py`: serves dummy customers/orders/tickets for ETL
+- `scripts/etl_sync.py`: loads dummy API data into MySQL (customers, orders, tickets)
+- `scripts/eval_replay.py`: replays sample queries through both implementations
+
+## Notes / Design Intent
+- **Prompts and tool signatures are intentionally aligned** across LangChain and Agents SDK versions.
+- **External services are optional**; you can run the agents without Qdrant/MySQL/MCP/SMTP, but tool calls will error until configured.
+- Agent outputs and routing are **model-driven**; set temperature to `0` if you want more repeatable behavior.
